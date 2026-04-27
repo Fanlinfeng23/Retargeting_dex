@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Local tools
+.claude/
+.codex/
+
+# ROS workspace outputs
+build/
+install/
+log/
+
+# Nested repository metadata
+.git/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+
+# Manus SDK oversized local binaries
+src/ROS2/ManusSDK/lib/libManusSDK.so
+src/ROS2/ManusSDK/lib/libManusSDK_Integrated.so

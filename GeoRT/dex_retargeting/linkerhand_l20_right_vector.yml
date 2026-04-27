@@ -1,0 +1,43 @@
+retargeting:
+  type: vector
+  urdf_path: linkerhand_l20_right/linkerhand_l20_right.urdf
+
+  # Exclude mimic joints from optimization variables. They are reconstructed
+  # automatically by dex-retargeting's MimicJointKinematicAdaptor.
+  target_joint_names:
+    [
+      "thumb_joint0", "thumb_joint1", "thumb_joint2", "thumb_joint3",
+      "index_joint0", "index_joint1", "index_joint2",
+      "middle_joint0", "middle_joint1", "middle_joint2",
+      "ring_joint0", "ring_joint1", "ring_joint2",
+      "little_joint0", "little_joint1", "little_joint2"
+    ]
+
+  # Reuse the same 20 wrist-to-finger correspondences defined in the GeoRT L20
+  # config, but express them as vector retargeting constraints.
+  target_origin_link_names:
+    [
+      "base_link", "base_link", "base_link", "base_link",
+      "base_link", "base_link", "base_link", "base_link",
+      "base_link", "base_link", "base_link", "base_link",
+      "base_link", "base_link", "base_link", "base_link",
+      "base_link", "base_link", "base_link", "base_link"
+    ]
+  target_task_link_names:
+    [
+      "thumb_link2", "thumb_link3", "thumb_link4", "thumb_link5",
+      "index_link1", "index_link2", "index_link3", "index_link4",
+      "middle_link1", "middle_link2", "middle_link3", "middle_link4",
+      "ring_link1", "ring_link2", "ring_link3", "ring_link4",
+      "little_link1", "little_link2", "little_link3", "little_link4"
+    ]
+  target_link_human_indices:
+    [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    ]
+
+  # Empirical default from the local L20 URDF and manus_data.npy recording.
+  # Override with --scaling or --auto-scale at runtime if needed.
+  scaling_factor: 1.8
+  low_pass_alpha: 0.2

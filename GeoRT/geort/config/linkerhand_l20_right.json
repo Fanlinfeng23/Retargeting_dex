@@ -1,0 +1,89 @@
+{
+    "name": "linkerhand_l20_right",
+    "urdf_path": "./assets/linkerhand_l20_right/linkerhand_l20_right.urdf",
+    "base_link": "base_link",
+
+    "joint_order": [
+        "thumb_joint0", "thumb_joint1", "thumb_joint2", "thumb_joint3", "thumb_joint4",
+        "index_joint0", "index_joint1", "index_joint2", "index_joint3",
+        "middle_joint0", "middle_joint1", "middle_joint2", "middle_joint3",
+        "ring_joint0", "ring_joint1", "ring_joint2", "ring_joint3",
+        "little_joint0", "little_joint1", "little_joint2", "little_joint3"
+    ],
+
+    "retarget_groups": [
+        {
+            "name": "thumb_chain",
+            "links": ["thumb_link2", "thumb_link3", "thumb_link4", "thumb_link5"],
+            "center_offsets": [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+            "human_hand_ids": [1, 2, 3, 4],
+            "joint": ["thumb_joint0", "thumb_joint1", "thumb_joint2", "thumb_joint3", "thumb_joint4"]
+        },
+        {
+            "name": "index_chain",
+            "links": ["index_link1", "index_link2", "index_link3", "index_link4"],
+            "center_offsets": [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+            "human_hand_ids": [5, 6, 7, 8],
+            "joint": ["index_joint0", "index_joint1", "index_joint2", "index_joint3"]
+        },
+        {
+            "name": "middle_chain",
+            "links": ["middle_link1", "middle_link2", "middle_link3", "middle_link4"],
+            "center_offsets": [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+            "human_hand_ids": [9, 10, 11, 12],
+            "joint": ["middle_joint0", "middle_joint1", "middle_joint2", "middle_joint3"]
+        },
+        {
+            "name": "ring_chain",
+            "links": ["ring_link1", "ring_link2", "ring_link3", "ring_link4"],
+            "center_offsets": [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+            "human_hand_ids": [13, 14, 15, 16],
+            "joint": ["ring_joint0", "ring_joint1", "ring_joint2", "ring_joint3"]
+        },
+        {
+            "name": "little_chain",
+            "links": ["little_link1", "little_link2", "little_link3", "little_link4"],
+            "center_offsets": [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+            "human_hand_ids": [17, 18, 19, 20],
+            "joint": ["little_joint0", "little_joint1", "little_joint2", "little_joint3"]
+        }
+    ],
+
+    "fingertip_link": [
+        {
+            "name": "thumb",
+            "link": "thumb_link5",
+            "joint": ["thumb_joint0", "thumb_joint1", "thumb_joint2", "thumb_joint3", "thumb_joint4"],
+            "center_offset": [0.0, 0.0, 0.0],
+            "human_hand_id": 4
+        },
+        {
+            "name": "index",
+            "link": "index_link4",
+            "joint": ["index_joint0", "index_joint1", "index_joint2", "index_joint3"],
+            "center_offset": [0.0, 0.0, 0.0],
+            "human_hand_id": 8
+        },
+        {
+            "name": "middle",
+            "link": "middle_link4",
+            "joint": ["middle_joint0", "middle_joint1", "middle_joint2", "middle_joint3"],
+            "center_offset": [0.0, 0.0, 0.0],
+            "human_hand_id": 12
+        },
+        {
+            "name": "ring",
+            "link": "ring_link4",
+            "joint": ["ring_joint0", "ring_joint1", "ring_joint2", "ring_joint3"],
+            "center_offset": [0.0, 0.0, 0.0],
+            "human_hand_id": 16
+        },
+        {
+            "name": "little",
+            "link": "little_link4",
+            "joint": ["little_joint0", "little_joint1", "little_joint2", "little_joint3"],
+            "center_offset": [0.0, 0.0, 0.0],
+            "human_hand_id": 20
+        }
+    ]
+}
