@@ -57,6 +57,127 @@ The repository is organized as a clean upload target for GitHub. Build outputs a
 
 These two binaries exceed GitHub's normal file size limit and are intentionally omitted from version control. See `src/ROS2/ManusSDK/lib/README.md` for restore instructions.
 
+## Quick Start For Collaborators
+
+If you are cloning this repository on a new machine, use this order:
+
+1. clone the repository,
+2. restore the Manus SDK shared libraries into `src/ROS2/ManusSDK/lib/`,
+3. build the ROS2 publisher workspace,
+4. run either the GeoRT or dex-retargeting workflow.
+
+The fastest path for new collaborators is to start from:
+
+- `GeoRT/README_L20_DEX_RETARGETING.md`
+
+because it avoids retraining and directly supports offline replay and real-time retargeting.
+
+## Prerequisites
+
+### Python
+
+The dex-retargeting replacement workflow in `GeoRT/` is expected to run with:
+
+```bash
+/usr/bin/python3
+```
+
+### ROS2
+
+For Manus ROS2 publisher and real-time retargeting:
+
+```bash
+source /opt/ros/humble/setup.bash
+```
+
+### Manus SDK
+
+The repository does not include the large Manus SDK shared libraries. Collaborators must restore:
+
+- `src/ROS2/ManusSDK/lib/libManusSDK.so`
+- `src/ROS2/ManusSDK/lib/libManusSDK_Integrated.so`
+
+See:
+
+- `src/ROS2/ManusSDK/lib/README.md`
+
+for placement details.
+
+## Restoring Excluded Content
+
+### 1. Manus SDK shared libraries
+
+These are not tracked in git.
+
+Collaborators must obtain the Linux Manus SDK package from the same source already used in this project and place the `.so` files into:
+
+```text
+src/ROS2/ManusSDK/lib/
+```
+
+Expected contents after restore:
+
+```text
+src/ROS2/ManusSDK/lib/
+├── libManusSDK.so
+└── libManusSDK_Integrated.so
+```
+
+### 2. ROS2 build artifacts
+
+The following are intentionally excluded and must be rebuilt locally:
+
+- `build/`
+- `install/`
+- `log/`
+
+From the repository root, rebuild with:
+
+```bash
+source /opt/ros/humble/setup.bash
+colcon build --base-paths src/ROS2
+```
+
+After build:
+
+```bash
+source install/setup.bash
+```
+
+### 3. Optional local-only tool metadata
+
+These are not needed by collaborators and are intentionally omitted:
+
+- `.claude/`
+- local git metadata from the original upstream repos
+
+## Build And Run
+
+### Build Manus ROS2 packages
+
+From repository root:
+
+```bash
+source /opt/ros/humble/setup.bash
+colcon build --base-paths src/ROS2
+source install/setup.bash
+```
+
+### Start Manus publisher
+
+```bash
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 run manus_ros2 manus_data_publisher
+```
+
+### Check Manus topics
+
+```bash
+ros2 topic list | grep manus
+ros2 topic echo /manus_glove_0 --once
+```
+
 ## Main Entry Points
 
 ### GeoRT L20 pipeline
@@ -101,6 +222,8 @@ Key datasets are under:
 - `GeoRT/data/OKandFist.npy`
 - `GeoRT/data/TouchEveryFinger.npy`
 
+These datasets are already included and do not require regeneration for offline verification.
+
 ### 3. Run offline retargeting
 
 From `GeoRT/`:
@@ -139,12 +262,36 @@ cd GeoRT
   --scaling 1.8
 ```
 
+### 6. Run offline visualization
+
+For a full-sequence visualization without frame subsampling:
+
+```bash
+cd GeoRT
+/usr/bin/python3 dex_retargeting/visualize_manus_l20.py \
+  --input-path data/manus_data.npy \
+  --output-path analysis/manus_l20_visualization.gif \
+  --frame-step 1 \
+  --fps 30
+```
+
 ## Notes For GitHub Upload
 
 - This repository is prepared as a new aggregate project rather than pushing directly to the original `facebookresearch/GeoRT` or `dexsuite/dex-retargeting` remotes.
 - Before pushing, set the remote to your own GitHub repository.
 - If the Manus SDK `.so` files are required on another machine, restore them manually into:
   `src/ROS2/ManusSDK/lib/`
+
+## Included Outputs
+
+The repository already includes useful ready-made outputs for review and demonstration:
+
+- `GeoRT/analysis/manus_l20_dex_retargeting.npz`
+- `GeoRT/analysis/manus_l20_visualization.gif`
+- `GeoRT/analysis/OKandFist_full.gif`
+- `GeoRT/analysis/TouchEveryFinger_full.gif`
+
+This allows collaborators to inspect the results immediately before rebuilding or rerunning anything locally.
 
 ## Local Provenance
 
