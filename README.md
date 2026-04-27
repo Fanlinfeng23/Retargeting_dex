@@ -144,13 +144,6 @@ After build:
 source install/setup.bash
 ```
 
-### 3. Optional local-only tool metadata
-
-These are not needed by collaborators and are intentionally omitted:
-
-- `.claude/`
-- local git metadata from the original upstream repos
-
 ## Build And Run
 
 ### Build Manus ROS2 packages
