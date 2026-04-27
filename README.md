@@ -57,6 +57,25 @@ The repository is organized as a clean upload target for GitHub. Build outputs a
 
 These two binaries exceed GitHub's normal file size limit and are intentionally omitted from version control. See `src/ROS2/ManusSDK/lib/README.md` for restore instructions.
 
+## L20 Content Status
+
+The L20-specific content used in this project is already included in the repository:
+
+- `GeoRT/assets/linkerhand_l20_right/`
+- `GeoRT/geort/config/linkerhand_l20_right.json`
+- `GeoRT/dex_retargeting/linkerhand_l20_right_vector.yml`
+- `GeoRT/data/*.npy`
+- `GeoRT/checkpoint/`
+- `GeoRT/analysis/`
+
+In practice, collaborators do **not** need to separately fetch the L20 URDF, meshes, retargeting configs, datasets, or generated visualizations.
+
+The main content that still needs to be restored manually is the MANUS SDK shared library pair under:
+
+```text
+src/ROS2/ManusSDK/lib/
+```
+
 ## Quick Start For Collaborators
 
 If you are cloning this repository on a new machine, use this order:
@@ -109,7 +128,65 @@ for placement details.
 
 These are not tracked in git.
 
-Collaborators must obtain the Linux Manus SDK package from the same source already used in this project and place the `.so` files into:
+According to the official MANUS documentation:
+
+- the C++ SDK and ROS2 package are distributed together as part of the `MANUS Core 3 SDK (including ROS2 Package)` download,
+- the download is available from the MANUS Download Center after creating a free account or logging in,
+- the SDK zip contains Linux and Windows examples plus a `ROS2` folder,
+- on Linux, `integrated` mode works directly on Linux,
+- on Linux, `remote` mode still requires a separate Windows machine running MANUS Core on the network because MANUS Core itself runs on Windows.
+
+Official references:
+
+- MANUS SDK getting started:
+  `https://docs.manus-meta.com/3.1.0/Plugins/SDK/getting%20started/`
+- Linux SDK guide:
+  `https://docs.manus-meta.com/3.1.0/Plugins/SDK/Linux/`
+- ROS2 getting started:
+  `https://docs.manus-meta.com/3.1.0/Plugins/SDK/ROS2/getting%20started/`
+- Latest MANUS downloads page:
+  `https://docs.manus-meta.com/latest/Resources/`
+
+### 1.1 Download Procedure From MANUS
+
+Follow this sequence:
+
+1. Open the MANUS SDK getting-started page listed above.
+2. Go to the MANUS Download Center from that page.
+3. Create a free MANUS account or log in to your existing account.
+4. Open the latest downloads page.
+5. Under `MANUS Core 3.1`, download:
+
+```text
+MANUS Core 3 SDK (including ROS2 Package)
+```
+
+At the time reflected by the documentation page, the listed SDK version is:
+
+```text
+3.1.1
+```
+
+### 1.2 Expected ZIP Contents
+
+The MANUS SDK getting-started guide says the extracted archive contains at least:
+
+- `SDKClient_Linux`
+- `SDKClient_Windows`
+- `SDKMinimalClient_Linux`
+- `SDKMinimalClient_Windows`
+- `ROS2`
+
+For this repository, the critical directory to recover is the SDK library folder containing:
+
+- `libManusSDK.so`
+- `libManusSDK_Integrated.so`
+
+These are expected under the SDK package's `ManusSDK/lib/` directory.
+
+### 1.3 Restore Into This Repository
+
+After downloading and extracting the official MANUS SDK package, copy the two Linux shared libraries into:
 
 ```text
 src/ROS2/ManusSDK/lib/
@@ -122,6 +199,82 @@ src/ROS2/ManusSDK/lib/
 ├── libManusSDK.so
 └── libManusSDK_Integrated.so
 ```
+
+If your extracted SDK lives at `/path/to/MANUS_SDK`, the copy command is:
+
+```bash
+cp /path/to/MANUS_SDK/ManusSDK/lib/libManusSDK.so \
+   src/ROS2/ManusSDK/lib/
+
+cp /path/to/MANUS_SDK/ManusSDK/lib/libManusSDK_Integrated.so \
+   src/ROS2/ManusSDK/lib/
+```
+
+### 1.4 Which Library To Use
+
+From the MANUS Linux SDK guide:
+
+- `libManusSDK.so`
+  standard library name used by the remote workflow,
+- `libManusSDK_Integrated.so`
+  library used when running Linux in `integrated mode` without the remote stack.
+
+The Linux guide explicitly notes that if you are using `integrated mode` only, you may point your build to `libManusSDK_Integrated.so`, or rename it to `libManusSDK.so` and replace the original library in the package directory.
+
+### 1.5 License Requirements
+
+The official MANUS documentation states:
+
+- Linux SDK functionality requires either a `MANUS Bodypack` or a `MANUS license key` with the `SDK` feature enabled.
+- The `SDK Integrated` documentation further states that the integrated functionality requires a `Feature` style license with the `SDK` feature enabled, and advises contacting `support@manus-meta.com` if you do not have that license.
+
+### 1.6 Linux Prerequisites From MANUS Docs
+
+The MANUS Linux guide lists these supported Ubuntu versions:
+
+- 20.04
+- 22.04
+- 24.04
+
+For `integrated mode`, the documented package install command is:
+
+```bash
+sudo apt-get update && sudo apt-get install -y \
+  build-essential \
+  libusb-1.0-0-dev \
+  zlib1g-dev \
+  libudev-dev \
+  gdb \
+  libncurses5-dev && sudo apt-get clean
+```
+
+For `remote mode`, the MANUS docs additionally list packages such as:
+
+- `git`
+- `libtool`
+- `libzmq3-dev`
+- GRPC / Protobuf requirements
+
+### 1.7 Linux Device Rules
+
+The MANUS Linux guide also documents udev rules for hardware access. Create:
+
+```text
+/etc/udev/rules.d/70-manus-hid.rules
+```
+
+with:
+
+```text
+# HIDAPI/libusb
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="3325", MODE:="0666"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1915", ATTRS{idProduct}=="83fd", MODE:="0666"
+
+# HIDAPI/hidraw
+KERNEL=="hidraw*", ATTRS{idVendor}=="3325", MODE:="0666"
+```
+
+The MANUS documentation recommends a full reboot after placing the rules file.
 
 ### 2. ROS2 build artifacts
 
@@ -155,6 +308,15 @@ source /opt/ros/humble/setup.bash
 colcon build --base-paths src/ROS2
 source install/setup.bash
 ```
+
+This matches the MANUS ROS2 getting-started guide at a high level:
+
+1. install ROS2,
+2. obtain the MANUS C++ SDK,
+3. copy the `ROS2` package contents into your workspace `src`,
+4. build with `colcon`,
+5. source `install/setup.bash`,
+6. run `ros2 run manus_ros2 manus_data_publisher`.
 
 ### Start Manus publisher
 
