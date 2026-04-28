@@ -3,6 +3,9 @@
 > 基于 [GeoRT](https://github.com/facebookresearch/GeoRT) 官方框架，将 Manus 动捕手套数据
 > retargeting 到灵心巧手 L20 右手的完整流程。
 
+如果你的目标已经切换到 G20，并且希望使用 `dex-retargeting` 官方 IK，而不是 GeoRT 训练式方案，请直接看：
+[README_G20_DEX_RETARGETING.md](README_G20_DEX_RETARGETING.md)
+
 ---
 
 ## 目录

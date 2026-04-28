@@ -2,6 +2,9 @@
 
 本文档是 `GeoRT/README_L20_GEORT.md` 的 `dex-retargeting` 替代版，目标是把 Manus 手套提取到的人手位姿，直接重定向到灵心巧手 L20 右手，不再经过 GeoRT 的训练式 IK 网络。
 
+如果你现在要做的是 G20 版本，而不是 L20，请直接看：
+[README_G20_DEX_RETARGETING.md](README_G20_DEX_RETARGETING.md)
+
 这个方案已经在当前工作区完成了以下落地：
 
 1. 复用现有 `GeoRT/assets/linkerhand_l20_right` 下的 L20 URDF 和 mesh。

@@ -1,9 +1,10 @@
 # Manus To L20 Retargeting Workspace
 
-This repository aggregates the local workspace used to retarget Manus glove hand pose data to the LinkerHand L20 right hand with two approaches:
+This repository aggregates the local workspace used to retarget Manus glove hand pose data to LinkerHand hands with multiple approaches:
 
-1. `GeoRT`: the training-based pipeline, including L20 configuration, URDF assets, recorded datasets, checkpoints, analysis scripts, and generated visualizations.
+1. `GeoRT`: the training-based pipeline, currently prepared for the LinkerHand L20 right hand.
 2. `dex-retargeting`: the optimization-based pipeline used here as the no-training replacement for real-time and offline retargeting.
+3. `G20 dex-retargeting`: the dedicated G20 right-hand pipeline built on a G20-specific URDF and the official `dex-retargeting` IK solver.
 
 The repository is organized as a clean upload target for GitHub. Build outputs and oversized proprietary SDK binaries are intentionally excluded so the project can be versioned and cloned reliably.
 
@@ -14,10 +15,12 @@ The repository is organized as a clean upload target for GitHub. Build outputs a
 ├── GeoRT/
 │   ├── README_L20_GEORT.md
 │   ├── README_L20_DEX_RETARGETING.md
+│   ├── README_G20_DEX_RETARGETING.md
 │   ├── dex_retargeting/
 │   ├── data/
 │   ├── analysis/
 │   ├── assets/linkerhand_l20_right/
+│   ├── assets/linkerhand_g20_right/
 │   └── checkpoint/
 ├── dex-retargeting/
 └── src/ROS2/
@@ -30,7 +33,7 @@ The repository is organized as a clean upload target for GitHub. Build outputs a
 
 - `GeoRT/`
   The main experimental workspace, including:
-  local L20 hand configuration,
+  local L20 and G20 hand configuration,
   Manus ROS2 bridge scripts,
   recorded datasets such as `manus_data.npy`, `OKandFist.npy`, and `TouchEveryFinger.npy`,
   trained checkpoints,
@@ -76,6 +79,25 @@ The main content that still needs to be restored manually is the MANUS SDK share
 src/ROS2/ManusSDK/lib/
 ```
 
+## G20 Content Status
+
+The G20-specific retargeting content used in this project is also included in the repository:
+
+- `GeoRT/assets/linkerhand_g20_right/`
+- `GeoRT/dex_retargeting/linkerhand_g20_right_vector.yml`
+- `GeoRT/dex_retargeting/manus_g20_dex_retarget.py`
+- `GeoRT/README_G20_DEX_RETARGETING.md`
+- `GeoRT/analysis/manus_g20_dex_retargeting.npz`
+
+The current G20 implementation uses the official `dex-retargeting` optimizer and a dedicated right-hand G20 kinematic URDF derived from the public official `lhg20/left` model.
+
+The current validation status is:
+
+- Manus right hand is retargeted to a G20 right-hand model, not to a left-hand model.
+- The IK stage is the official `dex-retargeting` solver (`RetargetingConfig.load_from_file(...).build()` + `retarget(...)`).
+- Offline replay on `GeoRT/data/manus_data.npy` completes across all valid frames and exports `GeoRT/analysis/manus_g20_dex_retargeting.npz`.
+- Real-time ROS2 startup is checked, but final on-hardware accuracy still depends on per-hand calibration and should be confirmed with a few standard gestures on the real G20.
+
 ## Quick Start For Collaborators
 
 If you are cloning this repository on a new machine, use this order:
@@ -88,8 +110,9 @@ If you are cloning this repository on a new machine, use this order:
 The fastest path for new collaborators is to start from:
 
 - `GeoRT/README_L20_DEX_RETARGETING.md`
+- `GeoRT/README_G20_DEX_RETARGETING.md`
 
-because it avoids retraining and directly supports offline replay and real-time retargeting.
+because both avoid retraining and directly support offline replay and real-time retargeting.
 
 ## Prerequisites
 
