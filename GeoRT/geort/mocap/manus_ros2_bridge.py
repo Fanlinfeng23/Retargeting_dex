@@ -29,35 +29,34 @@ import argparse
 import numpy as np
 import time
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from manus_ros2_msgs.msg import ManusGlove
 import zmq
 
 
 # ---------------------------------------------------------------------------
-# Canonical frame transform (copied verbatim from manus_mocap_core.py)
+# Canonical frame transform matching dex-retargeting's SingleHandDetector.
 # ---------------------------------------------------------------------------
+OPERATOR2MANO_RIGHT = np.array(
+    [
+        [0.0, 0.0, -1.0],
+        [-1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+    ],
+    dtype=np.float64,
+)
+
+
 def hand_to_canonical(hand_point):
-    """Convert world-frame 21 keypoints to wrist-local canonical frame."""
-    z_axis = hand_point[9] - hand_point[0]
-    z_axis = _normalize(z_axis, "wrist->middle_mcp")
-    y_axis_aux = hand_point[5] - hand_point[13]
-    y_axis_aux = _normalize(y_axis_aux, "index_mcp->ring_mcp")
+    """Convert world-frame 21 keypoints to dex-retargeting's right-hand frame."""
+    keypoint_3d_array = np.asarray(hand_point, dtype=np.float64)
+    if keypoint_3d_array.shape != (21, 3):
+        raise ValueError(f"Expected (21, 3) keypoints, got {keypoint_3d_array.shape}")
 
-    x_axis = np.cross(y_axis_aux, z_axis)
-    x_axis = _normalize(x_axis, "palm_normal")
-    y_axis = np.cross(z_axis, x_axis)
-    y_axis = _normalize(y_axis, "palm_y")
-
-    rotation_base = np.array([x_axis, y_axis, z_axis]).transpose()
-    transform = np.eye(4)
-    transform[:3, :3] = rotation_base
-    transform[:3, 3] = hand_point[0]
-
-    transform_inv = np.linalg.inv(transform)
-    pts = np.concatenate([np.array(hand_point), np.ones((21, 1))], axis=-1)
-    pts = pts @ transform_inv.transpose()
-    return pts[:, :3]
+    keypoint_3d_array = keypoint_3d_array - keypoint_3d_array[0:1, :]
+    wrist_rot = estimate_frame_from_hand_points(keypoint_3d_array)
+    return keypoint_3d_array @ wrist_rot @ OPERATOR2MANO_RIGHT
 
 
 def _normalize(vec: np.ndarray, name: str, eps: float = 1e-8) -> np.ndarray:
@@ -65,6 +64,31 @@ def _normalize(vec: np.ndarray, name: str, eps: float = 1e-8) -> np.ndarray:
     if not np.isfinite(norm) or norm <= eps:
         raise ValueError(f"Degenerate axis {name}: norm={norm}")
     return vec / norm
+
+
+def estimate_frame_from_hand_points(keypoint_3d_array: np.ndarray) -> np.ndarray:
+    """Official dex-retargeting wrist frame estimator for MediaPipe-ordered points."""
+    keypoint_3d_array = np.asarray(keypoint_3d_array, dtype=np.float64)
+    if keypoint_3d_array.shape != (21, 3):
+        raise ValueError(f"Expected (21, 3) keypoints, got {keypoint_3d_array.shape}")
+
+    points = keypoint_3d_array[[0, 5, 9], :]
+    x_vector = points[0] - points[2]
+
+    centered = points - np.mean(points, axis=0, keepdims=True)
+    _, _, vh = np.linalg.svd(centered)
+    normal = vh[2, :]
+
+    x_axis = x_vector - np.sum(x_vector * normal) * normal
+    x_axis = _normalize(x_axis, "official wrist->middle projection")
+    z_axis = np.cross(x_axis, normal)
+    z_axis = _normalize(z_axis, "official palm lateral")
+
+    if np.sum(z_axis * (centered[1] - centered[2])) < 0:
+        normal *= -1
+        z_axis *= -1
+
+    return np.stack([x_axis, normal, z_axis], axis=1)
 
 
 def _is_valid_keypoints(keypoints: np.ndarray, eps: float = 1e-6) -> bool:
@@ -86,9 +110,42 @@ def _node_position(node) -> np.ndarray:
     return np.array([p.x, p.y, p.z], dtype=np.float64)
 
 
+def _order_chain_nodes_by_joint_type(nodes):
+    by_type = {}
+    for node in nodes:
+        by_type.setdefault(node.joint_type, []).append(node)
+
+    def pick(*joint_types):
+        for joint_type in joint_types:
+            candidates = by_type.get(joint_type, [])
+            if candidates:
+                return min(candidates, key=lambda node: node.node_id)
+        return None
+
+    ordered = [
+        pick("MCP"),
+        pick("PIP"),
+        pick("DIP", "IP"),
+        pick("TIP"),
+    ]
+    if all(node is not None for node in ordered):
+        return ordered
+
+    priority = {"MCP": 0, "PIP": 1, "IP": 2, "DIP": 2, "TIP": 3}
+    typed = [node for node in nodes if node.joint_type in priority]
+    if len(typed) >= 4:
+        return sorted(typed, key=lambda node: (priority[node.joint_type], node.node_id))[-4:]
+
+    return []
+
+
 def _order_chain_nodes(nodes):
     if len(nodes) == 0:
         return []
+
+    ordered_by_joint_type = _order_chain_nodes_by_joint_type(nodes)
+    if len(ordered_by_joint_type) >= 4:
+        return ordered_by_joint_type
 
     node_by_id = {node.node_id: node for node in nodes}
     child_map = {}
@@ -250,13 +307,14 @@ def main():
     )
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()
         node._socket.close(0)
         node._context.term()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':

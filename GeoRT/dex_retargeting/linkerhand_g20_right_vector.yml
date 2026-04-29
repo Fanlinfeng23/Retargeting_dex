@@ -2,6 +2,8 @@ retargeting:
   type: vector
   urdf_path: linkerhand_g20_right/linkerhand_g20_right.urdf
 
+  # Use only actuated source joints. Mimic DIP joints are reconstructed by
+  # dex-retargeting's MimicJointKinematicAdaptor from the URDF mimic tags.
   target_joint_names:
     [
       "thumb_cmc_pitch", "thumb_cmc_roll", "thumb_cmc_yaw", "thumb_mcp",
@@ -11,26 +13,24 @@ retargeting:
       "pinky_mcp_roll", "pinky_mcp_pitch", "pinky_pip"
     ]
 
+  # Official dex-retargeting teleop configs use wrist/base-to-fingertip
+  # vectors; the ShadowHand config adds wrist/base-to-middle vectors for
+  # better full-finger posture. The G20 URDF has no official fingertip links,
+  # so the closest official kinematic targets are the distal and middle links.
   target_origin_link_names:
     [
-      "wrist_base_link", "wrist_base_link", "wrist_base_link", "wrist_base_link",
-      "wrist_base_link", "wrist_base_link", "wrist_base_link", "wrist_base_link",
-      "wrist_base_link", "wrist_base_link", "wrist_base_link", "wrist_base_link",
-      "wrist_base_link", "wrist_base_link", "wrist_base_link", "wrist_base_link",
-      "wrist_base_link", "wrist_base_link", "wrist_base_link", "wrist_base_link"
+      "wrist_base_link", "wrist_base_link", "wrist_base_link", "wrist_base_link", "wrist_base_link",
+      "wrist_base_link", "wrist_base_link", "wrist_base_link", "wrist_base_link", "wrist_base_link"
     ]
   target_task_link_names:
     [
-      "thumb_metacarpals_base2", "thumb_metacarpals", "thumb_proximal", "thumb_distal",
-      "index_metacarpals", "index_proximal", "index_middle", "index_distal",
-      "middle_metacarpals", "middle_proximal", "middle_middle", "middle_distal",
-      "ring_metacarpals", "ring_proximal", "ring_middle", "ring_distal",
-      "pinky_metacarpals", "pinky_proximal", "pinky_middle", "pinky_distal"
+      "thumb_distal", "index_distal", "middle_distal", "ring_distal", "pinky_distal",
+      "thumb_proximal", "index_middle", "middle_middle", "ring_middle", "pinky_middle"
     ]
   target_link_human_indices:
     [
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [4, 8, 12, 16, 20, 2, 6, 10, 14, 18]
     ]
 
   scaling_factor: 1.0
